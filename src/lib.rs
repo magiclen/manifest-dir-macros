@@ -52,7 +52,7 @@ static MANIFEST_DIR: Lazy<PathBuf> = Lazy::new(|| {
     let s = env::var_os("CARGO_MANIFEST_DIR").expect("we need CARGO_MANIFEST_DIR");
 
     #[cfg(all(windows, feature = "replace-separator"))]
-    let s = beautify_windows_path_os(path).expect("a UTF8-encodable CARGO_MANIFEST_DIR");
+    let s = beautify_windows_path_os(s).expect("a UTF8-encodable CARGO_MANIFEST_DIR");
 
     PathBuf::from(s)
 });
