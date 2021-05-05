@@ -25,14 +25,21 @@ println!(not_directory_relative_path!("Cargo.toml"));
 println!(file_relative_path!("Cargo.toml"));
 
 println!(get_file_name!("src/lib.rs"));
+println!(get_file_name!(default = "main.rs", "/"));
 println!(get_file_stem!("src/lib.rs"));
+println!(get_file_stem!(default = "lib", "/"));
 println!(get_extension!("src/lib.rs"));
+println!(get_extension!(default = "rs", "src/lib"));
 println!(get_parent!("src/lib.rs"));
+println!(get_parent!(default = "/home", "/"));
 
 #[cfg(feature = "mime_guess")]
-println!(mime_guess!("src/lib.rs"));
+{
+    println!(mime_guess!("src/lib.rs"));
+    println!(mime_guess!(default = "application/octet-stream", "Cargo.lock"));
+}
 
-// The `tuple` feature allows these macros to support inputting nested literal string tuples, which is useful when you want to use these macros inside a `macro_rules!` macro and concatenate with other literal strings.
+// The `tuple` feature let these macros above support to input nested literal string tuples, which is useful when you want to use these macros inside a `macro_rule!` macro and concatenate with other literal strings.
 // `$x:expr` matchers can be used in these macros thus.
 #[cfg(feature = "tuple")]
 {
@@ -356,78 +363,110 @@ pub fn file_absolute_path(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Gets the file name for other purposes. If there is no file name, a compile error will be shown.
+/// Gets the file name for other purposes. If there is no file name, the default value will be used, or a compile error will be shown.
 ///
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
 pub fn get_file_name(input: TokenStream) -> TokenStream {
-    let original_path: PathBuf = parse_macro_input!(input as JoinBuilderNoBeautify).into();
+    let jb = parse_macro_input!(input as JoinBuilderNoBeautifyWithDefaultValue);
 
-    match original_path.file_name() {
+    match jb.0.file_name() {
         Some(file_name) => output_os_str(file_name),
-        None => compile_error(format!("The path {:?} has no file name", original_path)),
+        None => {
+            match jb.1 {
+                Some(expr) => output_expr(&expr),
+                None => compile_error(format!("The path {:?} has no file name", jb.0)),
+            }
+        }
     }
 }
 
-/// Gets the file stem for other purposes. If there is no file stem, a compile error will be shown.
+/// Gets the file stem for other purposes. If there is no file stem, the default value will be used, or a compile error will be shown.
 ///
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
 pub fn get_file_stem(input: TokenStream) -> TokenStream {
-    let original_path: PathBuf = parse_macro_input!(input as JoinBuilderNoBeautify).into();
+    let jb = parse_macro_input!(input as JoinBuilderNoBeautifyWithDefaultValue);
 
-    match original_path.file_stem() {
+    match jb.0.file_stem() {
         Some(file_stem) => output_os_str(file_stem),
-        None => compile_error(format!("The path {:?} has no file stem", original_path)),
+        None => {
+            match jb.1 {
+                Some(expr) => output_expr(&expr),
+                None => compile_error(format!("The path {:?} has no file stem", jb.0)),
+            }
+        }
     }
 }
 
-/// Gets the file stem for other purposes. If there is no file extension, a compile error will be shown.
+/// Gets the file stem for other purposes. If there is no file extension, the default value will be used, or a compile error will be shown.
 ///
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
 pub fn get_extension(input: TokenStream) -> TokenStream {
-    let original_path: PathBuf = parse_macro_input!(input as JoinBuilderNoBeautify).into();
+    let jb = parse_macro_input!(input as JoinBuilderNoBeautifyWithDefaultValue);
 
-    match original_path.extension() {
+    match jb.0.extension() {
         Some(extension) => output_os_str(extension),
-        None => compile_error(format!("The path {:?} has no file extension", original_path)),
+        None => {
+            match jb.1 {
+                Some(expr) => output_expr(&expr),
+                None => compile_error(format!("The path {:?} has no file extension", jb.0)),
+            }
+        }
     }
 }
 
-/// Gets the parent for other purposes. If there is no parent, a compile error will be shown.
+/// Gets the parent for other purposes. If there is no parent, the default value will be used, or a compile error will be shown.
 ///
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
 pub fn get_parent(input: TokenStream) -> TokenStream {
-    let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
+    let jb = parse_macro_input!(input as JoinBuilderWithDefaultValue);
 
-    match original_path.parent() {
-        Some(extension) => output_path(extension),
-        None => compile_error(format!("The path {:?} has no parent", original_path)),
+    match jb.0.parent() {
+        Some(parent) => output_path(parent),
+        None => {
+            match jb.1 {
+                Some(expr) => output_expr(&expr),
+                None => compile_error(format!("The path {:?} has no parent", jb.0)),
+            }
+        }
     }
 }
 
 #[cfg(feature = "mime_guess")]
-/// Guesses the mime type by the path. If the guess fails, returns an empty literal string.
+/// Guesses the mime type by the path. If the guess fails, the default value will be used, or a compile error will be shown.
 ///
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
 pub fn mime_guess(input: TokenStream) -> TokenStream {
-    let original_path: PathBuf = parse_macro_input!(input as JoinBuilderNoBeautify).into();
+    let jb = parse_macro_input!(input as JoinBuilderNoBeautifyWithDefaultValue);
 
-    let mime = match original_path
+    match jb
+        .0
         .extension()
         .and_then(|ext| ext.to_str())
         .and_then(|ext| mime_guess::from_ext(ext).first())
+        .map(|mime| mime.to_string())
     {
-        Some(mime) => mime.to_string(),
-        None => String::new(),
-    };
+        Some(mime) => {
+            let code = quote! {
+                #mime
+            };
 
-    let code = quote! {
-        #mime
-    };
-
-    code.into()
+            code.into()
+        }
+        None => {
+            match jb.1 {
+                Some(expr) => output_expr(&expr),
+                None => {
+                    compile_error(format!(
+                        "The path {:?} can not be guessed for its mime type",
+                        jb.0
+                    ))
+                }
+            }
+        }
+    }
 }

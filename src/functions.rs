@@ -5,6 +5,7 @@ use std::ffi::OsStr;
 
 use std::path::Path;
 
+use crate::syn::Expr;
 use crate::TokenStream;
 
 #[cfg(all(windows, feature = "replace-separator"))]
@@ -111,4 +112,13 @@ pub fn output_path<P: AsRef<Path>>(p: P) -> TokenStream {
             compile_error(format!("The path {:?} cannot be canonicalized to a UTF-8 string.", p))
         }
     }
+}
+
+#[inline]
+pub fn output_expr(expr: &Expr) -> TokenStream {
+    let code = quote! {
+        #expr
+    };
+
+    code.into()
 }

@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
 use crate::syn::parse::{Parse, ParseStream};
-use crate::syn::LitStr;
+use crate::syn::{Expr, LitStr};
 
 #[cfg(feature = "tuple")]
-use crate::syn::{Expr, Lit};
+use crate::syn::Lit;
 
 #[cfg(feature = "tuple")]
 use crate::syn::spanned::Spanned;
@@ -15,8 +15,28 @@ use crate::quote::ToTokens;
 pub struct JoinBuilder(pub PathBuf);
 pub struct JoinBuilderNoBeautify(pub PathBuf);
 
+pub struct JoinBuilderWithDefaultValue(pub PathBuf, pub Option<Expr>);
+pub struct JoinBuilderNoBeautifyWithDefaultValue(pub PathBuf, pub Option<Expr>);
+
 #[cfg(not(feature = "tuple"))]
-fn parse(input: ParseStream, _beautify: bool) -> Result<PathBuf, syn::Error> {
+fn parse(
+    input: ParseStream,
+    default_value: bool,
+    _beautify: bool,
+) -> Result<(PathBuf, Option<Expr>), syn::Error> {
+    let default_value = if default_value && input.lookahead1().peek(Token!(default)) {
+        input.parse::<Token!(default)>()?;
+        input.parse::<Token!(=)>()?;
+
+        let expr = input.parse::<Expr>()?;
+
+        input.parse::<Token!(,)>()?;
+
+        Some(expr)
+    } else {
+        None
+    };
+
     let s = input.parse::<LitStr>()?.value();
 
     #[cfg(all(windows, feature = "replace-separator"))]
@@ -30,13 +50,13 @@ fn parse(input: ParseStream, _beautify: bool) -> Result<PathBuf, syn::Error> {
 
     loop {
         if input.is_empty() {
-            return Ok(path);
+            return Ok((path, default_value));
         }
 
         input.parse::<Token!(,)>()?;
 
         if input.is_empty() {
-            return Ok(path);
+            return Ok((path, default_value));
         }
 
         let s = input.parse::<LitStr>()?.value();
@@ -95,11 +115,28 @@ fn handle_expr(expr: Expr, path: &mut PathBuf, _beautify: bool) -> Result<(), sy
 }
 
 #[cfg(feature = "tuple")]
-fn parse(input: ParseStream, _beautify: bool) -> Result<PathBuf, syn::Error> {
+fn parse(
+    input: ParseStream,
+    default_value: bool,
+    _beautify: bool,
+) -> Result<(PathBuf, Option<Expr>), syn::Error> {
     if input.is_empty() {
         // to hint developers that they must input some arguments
         let _ = input.parse::<LitStr>()?;
     }
+
+    let default_value = if default_value && input.lookahead1().peek(Token!(default)) {
+        input.parse::<Token!(default)>()?;
+        input.parse::<Token!(=)>()?;
+
+        let expr = input.parse::<Expr>()?;
+
+        input.parse::<Token!(,)>()?;
+
+        Some(expr)
+    } else {
+        None
+    };
 
     let mut path = PathBuf::new();
 
@@ -115,20 +152,42 @@ fn parse(input: ParseStream, _beautify: bool) -> Result<PathBuf, syn::Error> {
         }
     }
 
-    Ok(path)
+    Ok((path, default_value))
 }
 
 impl Parse for JoinBuilder {
     #[inline]
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-        Ok(JoinBuilder(parse(input, true)?))
+        let result = parse(input, false, true)?;
+
+        Ok(JoinBuilder(result.0))
     }
 }
 
 impl Parse for JoinBuilderNoBeautify {
     #[inline]
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-        Ok(JoinBuilderNoBeautify(parse(input, false)?))
+        let result = parse(input, false, false)?;
+
+        Ok(JoinBuilderNoBeautify(result.0))
+    }
+}
+
+impl Parse for JoinBuilderWithDefaultValue {
+    #[inline]
+    fn parse(input: ParseStream) -> Result<Self, syn::Error> {
+        let result = parse(input, true, true)?;
+
+        Ok(JoinBuilderWithDefaultValue(result.0, result.1))
+    }
+}
+
+impl Parse for JoinBuilderNoBeautifyWithDefaultValue {
+    #[inline]
+    fn parse(input: ParseStream) -> Result<Self, syn::Error> {
+        let result = parse(input, true, false)?;
+
+        Ok(JoinBuilderNoBeautifyWithDefaultValue(result.0, result.1))
     }
 }
 
