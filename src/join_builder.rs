@@ -29,6 +29,9 @@ impl Parse for JoinBuilder {
 
             let s = input.parse::<LitStr>()?.value();
 
+            #[cfg(all(windows, feature = "replace-separator"))]
+            let s = crate::functions::beautify_windows_path(s);
+
             path.push(s);
         }
     }
