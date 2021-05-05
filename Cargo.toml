@@ -1,0 +1,27 @@
+[package]
+name = "manifest-dir-macros"
+version = "0.1.0"
+authors = ["Magic Len <len@magiclen.org>"]
+edition = "2018"
+repository = "https://github.com/magiclen/manifest-dir-macros"
+homepage = "https://magiclen.org/manifest-dir-macros"
+keywords = ["CARGO_MANIFEST_DIR", "directory", "project", "root"]
+categories = ["no-std"]
+description = "This crate provides function-like macros to check or operate paths relative to CARGO_MANIFEST_DIR at compile time."
+readme = "README.md"
+license = "MIT"
+include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+once_cell = "1"
+
+proc-macro2 = "1"
+syn = "1"
+quote = "1"
+
+[features]
+default = ["replace-separator"]
+replace-separator = []
