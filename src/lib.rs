@@ -126,7 +126,7 @@ pub fn not_directory_path(input: TokenStream) -> TokenStream {
         MANIFEST_DIR.join(original_path)
     };
 
-    if !p.is_dir() {
+    if p.metadata().map(|m| !m.is_dir()).unwrap_or(false) {
         output_path(p)
     } else {
         compile_error_not_directory(p)
@@ -217,7 +217,7 @@ pub fn not_directory_relative_path(input: TokenStream) -> TokenStream {
     if original_path.is_relative() {
         let p = MANIFEST_DIR.join(original_path);
 
-        if !p.is_dir() {
+        if p.metadata().map(|m| !m.is_dir()).unwrap_or(false) {
             output_path(p)
         } else {
             compile_error_directory(p)
@@ -305,7 +305,7 @@ pub fn not_directory_absolute_path(input: TokenStream) -> TokenStream {
     let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
 
     if original_path.is_absolute() {
-        if !original_path.is_dir() {
+        if original_path.metadata().map(|m| !m.is_dir()).unwrap_or(false) {
             output_path(original_path)
         } else {
             compile_error_directory(original_path)
