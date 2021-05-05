@@ -3,7 +3,7 @@ Manifest Dir Macros
 
 [![CI](https://github.com/magiclen/manifest-dir-macros/actions/workflows/ci.yml/badge.svg)](https://github.com/magiclen/manifest-dir-macros/actions/workflows/ci.yml)
 
-This crate provides function-like macros to check or operate paths relative to CARGO_MANIFEST_DIR at compile time.
+This crate provides function-like macros to check or operate paths relative to **CARGO_MANIFEST_DIR** at compile time.
 
 ## Examples
 
