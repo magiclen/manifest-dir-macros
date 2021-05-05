@@ -11,6 +11,9 @@ use crate::syn::{Expr, Lit};
 #[cfg(feature = "tuple")]
 use crate::syn::spanned::Spanned;
 
+#[cfg(feature = "tuple")]
+use crate::quote::ToTokens;
+
 pub struct JoinBuilder(pub PathBuf);
 
 #[cfg(not(feature = "tuple"))]
@@ -66,9 +69,12 @@ fn handle_expr(expr: Expr, path: &mut PathBuf) -> Result<(), syn::Error> {
         }
         Expr::Group(group) => {
             // In order to use the `expr` matcher in this macro. I don't know why it ends up here.
-            use quote::ToTokens;
-
             let expr = syn::parse2::<Expr>(group.expr.into_token_stream())?;
+
+            return handle_expr(expr, path);
+        }
+        Expr::Paren(paren) => {
+            let expr = syn::parse2::<Expr>(paren.expr.into_token_stream())?;
 
             return handle_expr(expr, path);
         }
