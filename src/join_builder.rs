@@ -45,6 +45,45 @@ impl Parse for JoinBuilder {
 }
 
 #[cfg(feature = "tuple")]
+fn handle_expr(expr: Expr, path: &mut PathBuf) -> Result<(), syn::Error> {
+    match expr {
+        Expr::Lit(lit) => {
+            if let Lit::Str(s) = lit.lit {
+                let s = s.value();
+
+                #[cfg(all(windows, feature = "replace-separator"))]
+                let s = crate::functions::beautify_windows_path(s);
+
+                path.push(s);
+            } else {
+                return Err(syn::Error::new(lit.span(), "not a literal string"));
+            }
+        }
+        Expr::Tuple(tuple) => {
+            for expr in tuple.elems {
+                handle_expr(expr, path)?;
+            }
+        }
+        Expr::Group(group) => {
+            // In order to use the `expr` matcher in this macro. I don't know why it ends up here.
+            use quote::ToTokens;
+
+            let expr = syn::parse2::<Expr>(group.expr.into_token_stream())?;
+
+            return handle_expr(expr, path);
+        }
+        _ => {
+            return Err(syn::Error::new(
+                expr.span(),
+                "not a literal string or a literal string tuple",
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "tuple")]
 impl Parse for JoinBuilder {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         if input.is_empty() {
@@ -57,44 +96,7 @@ impl Parse for JoinBuilder {
         while !input.is_empty() {
             let expr = input.parse::<Expr>()?;
 
-            match expr {
-                Expr::Lit(lit) => {
-                    if let Lit::Str(s) = lit.lit {
-                        let s = s.value();
-
-                        #[cfg(all(windows, feature = "replace-separator"))]
-                        let s = crate::functions::beautify_windows_path(s);
-
-                        path.push(s);
-                    } else {
-                        return Err(syn::Error::new(lit.span(), "not a literal string"));
-                    }
-                }
-                Expr::Tuple(tuple) => {
-                    for e in tuple.elems {
-                        if let Expr::Lit(lit) = e {
-                            if let Lit::Str(s) = lit.lit {
-                                let s = s.value();
-
-                                #[cfg(all(windows, feature = "replace-separator"))]
-                                let s = crate::functions::beautify_windows_path(s);
-
-                                path.push(s);
-                            } else {
-                                return Err(syn::Error::new(lit.span(), "not a literal string"));
-                            }
-                        } else {
-                            return Err(syn::Error::new(e.span(), "not a literal string tuple"));
-                        }
-                    }
-                }
-                _ => {
-                    return Err(syn::Error::new(
-                        expr.span(),
-                        "not a literal string or a literal string tuple",
-                    ));
-                }
-            }
+            handle_expr(expr, &mut path)?;
 
             if input.lookahead1().peek(Token!(,)) {
                 input.parse::<Token!(,)>()?;

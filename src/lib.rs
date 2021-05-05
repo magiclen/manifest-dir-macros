@@ -24,7 +24,7 @@ println!(directory_relative_path!("src"));
 println!(not_directory_relative_path!("Cargo.toml"));
 println!(file_relative_path!("Cargo.toml"));
 
-// The `tuple` feature let these macros support to input a tuple or tuples, which is useful when you want to use these macros inside a `macro_rule!` macro and concatenate with other literal strings.
+// The `tuple` feature let these macros support to input nested literal string tuples, which is useful when you want to use these macros inside a `macro_rule!` macro and concatenate with other literal strings.
 // `$x:expr` matchers can be used in these macros thus.
 #[cfg(feature = "tuple")]
 {
@@ -33,6 +33,7 @@ println!(file_relative_path!("Cargo.toml"));
     println!(path!("a", ("foo", "bar")));
     println!(path!(("foo", "bar"), "a"));
     println!(path!(("foo", "bar"), ("a", "b")));
+    println!(path!(("foo", "bar", ("a", "b")), ("c", "d")));
 }
 ```
 */
