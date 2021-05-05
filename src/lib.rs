@@ -24,10 +24,13 @@ println!(directory_relative_path!("src"));
 println!(not_directory_relative_path!("Cargo.toml"));
 println!(file_relative_path!("Cargo.toml"));
 
-println!(file_name!("src/lib.rs"));
-println!(file_stem!("src/lib.rs"));
-println!(extension!("src/lib.rs"));
-println!(parent!("src/lib.rs"));
+println!(get_file_name!("src/lib.rs"));
+println!(get_file_stem!("src/lib.rs"));
+println!(get_extension!("src/lib.rs"));
+println!(get_parent!("src/lib.rs"));
+
+#[cfg(feature = "mime_guess")]
+println!(mime_guess!("src/lib.rs"));
 
 // The `tuple` feature allows these macros to support inputting nested literal string tuples, which is useful when you want to use these macros inside a `macro_rules!` macro and concatenate with other literal strings.
 // `$x:expr` matchers can be used in these macros thus.
@@ -52,6 +55,9 @@ extern crate syn;
 #[macro_use]
 extern crate quote;
 
+#[cfg(feature = "mime_guess")]
+extern crate mime_guess;
+
 mod functions;
 mod join_builder;
 
@@ -61,7 +67,7 @@ use std::path::PathBuf;
 use once_cell::sync::Lazy;
 use proc_macro::TokenStream;
 
-use join_builder::JoinBuilder;
+use join_builder::*;
 
 use functions::*;
 
@@ -350,12 +356,12 @@ pub fn file_absolute_path(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Get the file name for other purposes. If there is no file name, a compile error will be shown.
+/// Gets the file name for other purposes. If there is no file name, a compile error will be shown.
 ///
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
-pub fn file_name(input: TokenStream) -> TokenStream {
-    let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
+pub fn get_file_name(input: TokenStream) -> TokenStream {
+    let original_path: PathBuf = parse_macro_input!(input as JoinBuilderNoBeautify).into();
 
     match original_path.file_name() {
         Some(file_name) => output_os_str(file_name),
@@ -363,12 +369,12 @@ pub fn file_name(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Get the file stem for other purposes. If there is no file stem, a compile error will be shown.
+/// Gets the file stem for other purposes. If there is no file stem, a compile error will be shown.
 ///
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
-pub fn file_stem(input: TokenStream) -> TokenStream {
-    let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
+pub fn get_file_stem(input: TokenStream) -> TokenStream {
+    let original_path: PathBuf = parse_macro_input!(input as JoinBuilderNoBeautify).into();
 
     match original_path.file_stem() {
         Some(file_stem) => output_os_str(file_stem),
@@ -376,12 +382,12 @@ pub fn file_stem(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Get the file stem for other purposes. If there is no file extension, a compile error will be shown.
+/// Gets the file stem for other purposes. If there is no file extension, a compile error will be shown.
 ///
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
-pub fn extension(input: TokenStream) -> TokenStream {
-    let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
+pub fn get_extension(input: TokenStream) -> TokenStream {
+    let original_path: PathBuf = parse_macro_input!(input as JoinBuilderNoBeautify).into();
 
     match original_path.extension() {
         Some(extension) => output_os_str(extension),
@@ -389,15 +395,39 @@ pub fn extension(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Get the parent for other purposes. If there is no parent, a compile error will be shown.
+/// Gets the parent for other purposes. If there is no parent, a compile error will be shown.
 ///
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
-pub fn parent(input: TokenStream) -> TokenStream {
+pub fn get_parent(input: TokenStream) -> TokenStream {
     let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
 
     match original_path.parent() {
         Some(extension) => output_path(extension),
         None => compile_error(format!("The path {:?} has no parent", original_path)),
     }
+}
+
+#[cfg(feature = "mime_guess")]
+/// Guesses the mime type by the path. If the guess fails, returns an empty literal string.
+///
+/// Multiple components can be input by using commas to separate them.
+#[proc_macro]
+pub fn mime_guess(input: TokenStream) -> TokenStream {
+    let original_path: PathBuf = parse_macro_input!(input as JoinBuilderNoBeautify).into();
+
+    let mime = match original_path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .and_then(|ext| mime_guess::from_ext(ext).first())
+    {
+        Some(mime) => mime.to_string(),
+        None => String::new(),
+    };
+
+    let code = quote! {
+        #mime
+    };
+
+    code.into()
 }

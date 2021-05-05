@@ -1,6 +1,6 @@
 [package]
 name = "manifest-dir-macros"
-version = "0.1.9"
+version = "0.1.10"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2018"
 repository = "https://github.com/magiclen/manifest-dir-macros"
@@ -21,6 +21,8 @@ once_cell = "1"
 proc-macro2 = "1"
 syn = "1"
 quote = "1"
+
+mime_guess = { version = "2", optional = true }
 
 [features]
 default = ["replace-separator"]
