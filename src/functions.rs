@@ -51,7 +51,13 @@ pub fn compile_error_not_directory<P: AsRef<Path>>(p: P) -> TokenStream {
 
 #[inline]
 pub fn compile_error_directory<P: AsRef<Path>>(p: P) -> TokenStream {
-    compile_error(format!("The path {:?} is a directory", p.as_ref()))
+    let p = p.as_ref();
+
+    if p.exists() {
+        compile_error(format!("The path {:?} is a directory", p))
+    } else {
+        compile_error_not_exist(p)
+    }
 }
 
 #[inline]

@@ -129,7 +129,7 @@ pub fn not_directory_path(input: TokenStream) -> TokenStream {
     if p.metadata().map(|m| !m.is_dir()).unwrap_or(false) {
         output_path(p)
     } else {
-        compile_error_not_directory(p)
+        compile_error_directory(p)
     }
 }
 
