@@ -24,6 +24,11 @@ println!(directory_relative_path!("src"));
 println!(not_directory_relative_path!("Cargo.toml"));
 println!(file_relative_path!("Cargo.toml"));
 
+println!(file_name!("src/lib.rs"));
+println!(file_stem!("src/lib.rs"));
+println!(extension!("src/lib.rs"));
+println!(parent!("src/lib.rs"));
+
 // The `tuple` feature allows these macros to support inputting nested literal string tuples, which is useful when you want to use these macros inside a `macro_rules!` macro and concatenate with other literal strings.
 // `$x:expr` matchers can be used in these macros thus.
 #[cfg(feature = "tuple")]
@@ -342,5 +347,57 @@ pub fn file_absolute_path(input: TokenStream) -> TokenStream {
         }
     } else {
         compile_error_not_absolute(original_path)
+    }
+}
+
+/// Get the file name for other purposes. If there is no file name, a compile error will be shown.
+///
+/// Multiple components can be input by using commas to separate them.
+#[proc_macro]
+pub fn file_name(input: TokenStream) -> TokenStream {
+    let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
+
+    match original_path.file_name() {
+        Some(file_name) => output_os_str(file_name),
+        None => compile_error(format!("The path {:?} has no file name", original_path)),
+    }
+}
+
+/// Get the file stem for other purposes. If there is no file stem, a compile error will be shown.
+///
+/// Multiple components can be input by using commas to separate them.
+#[proc_macro]
+pub fn file_stem(input: TokenStream) -> TokenStream {
+    let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
+
+    match original_path.file_stem() {
+        Some(file_stem) => output_os_str(file_stem),
+        None => compile_error(format!("The path {:?} has no file stem", original_path)),
+    }
+}
+
+/// Get the file stem for other purposes. If there is no file extension, a compile error will be shown.
+///
+/// Multiple components can be input by using commas to separate them.
+#[proc_macro]
+pub fn extension(input: TokenStream) -> TokenStream {
+    let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
+
+    match original_path.extension() {
+        Some(extension) => output_os_str(extension),
+        None => compile_error(format!("The path {:?} has no file extension", original_path)),
+    }
+}
+
+/// Get the parent for other purposes. If there is no parent, a compile error will be shown.
+///
+/// Multiple components can be input by using commas to separate them.
+#[proc_macro]
+pub fn parent(input: TokenStream) -> TokenStream {
+    let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
+
+    match original_path.parent() {
+        Some(extension) => output_path(extension),
+        None => compile_error(format!("The path {:?} has no parent", original_path)),
     }
 }

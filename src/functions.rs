@@ -1,6 +1,8 @@
 #[cfg(all(windows, feature = "replace-separator"))]
 use std::ffi::OsString;
 
+use std::ffi::OsStr;
+
 use std::path::Path;
 
 use crate::TokenStream;
@@ -73,6 +75,24 @@ pub fn compile_error_not_relative<P: AsRef<Path>>(p: P) -> TokenStream {
 #[inline]
 pub fn compile_error_not_absolute<P: AsRef<Path>>(p: P) -> TokenStream {
     compile_error(format!("The path {:?} is not absolute", p.as_ref()))
+}
+
+#[inline]
+pub fn output_os_str<S: AsRef<OsStr>>(s: S) -> TokenStream {
+    let s = s.as_ref();
+
+    match s.to_str() {
+        Some(utf8_str) => {
+            let code = quote! {
+                #utf8_str
+            };
+
+            code.into()
+        }
+        None => {
+            compile_error(format!("The OsStr {:?} cannot be canonicalized to a UTF-8 string.", s))
+        }
+    }
 }
 
 #[inline]
