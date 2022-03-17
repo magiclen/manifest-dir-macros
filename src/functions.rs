@@ -5,7 +5,9 @@ use std::ffi::OsStr;
 
 use std::path::Path;
 
-use crate::syn::Expr;
+use quote::quote;
+use syn::Expr;
+
 use crate::TokenStream;
 
 #[cfg(all(windows, feature = "replace-separator"))]

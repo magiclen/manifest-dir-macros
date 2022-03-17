@@ -1,16 +1,16 @@
 use std::path::PathBuf;
 
-use crate::syn::parse::{Parse, ParseStream};
-use crate::syn::{Expr, LitStr};
+use syn::parse::{Parse, ParseStream};
+use syn::{Expr, LitStr, Token};
 
 #[cfg(feature = "tuple")]
-use crate::syn::Lit;
+use syn::Lit;
 
 #[cfg(feature = "tuple")]
-use crate::syn::spanned::Spanned;
+use syn::spanned::Spanned;
 
 #[cfg(feature = "tuple")]
-use crate::quote::ToTokens;
+use quote::ToTokens;
 
 pub struct JoinBuilder(pub PathBuf);
 pub struct JoinBuilderNoBeautify(pub PathBuf);

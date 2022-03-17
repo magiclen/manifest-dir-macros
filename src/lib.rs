@@ -53,23 +53,13 @@ println!(get_parent!(default = "/home", "/"));
 ```
 */
 
-extern crate once_cell;
-extern crate proc_macro;
-
-#[macro_use]
-extern crate syn;
-
-#[macro_use]
-extern crate quote;
-
-#[cfg(feature = "mime_guess")]
-extern crate mime_guess;
-
 mod functions;
 mod join_builder;
 
 use std::env;
 use std::path::PathBuf;
+
+use syn::parse_macro_input;
 
 use once_cell::sync::Lazy;
 use proc_macro::TokenStream;
@@ -92,7 +82,7 @@ static MANIFEST_DIR: Lazy<PathBuf> = Lazy::new(|| {
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
 pub fn path(input: TokenStream) -> TokenStream {
-    let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
+    let original_path: PathBuf = syn::parse_macro_input!(input as JoinBuilder).into();
 
     let p = if original_path.is_absolute() {
         original_path
