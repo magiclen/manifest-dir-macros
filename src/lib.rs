@@ -59,8 +59,10 @@ mod join_builder;
 use std::env;
 use std::path::PathBuf;
 
-use quote::quote;
 use syn::parse_macro_input;
+
+#[cfg(feature = "mime_guess")]
+use quote::quote;
 
 use once_cell::sync::Lazy;
 use proc_macro::TokenStream;
