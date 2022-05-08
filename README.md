@@ -41,7 +41,7 @@ println!(get_parent!(default = "/home", "/"));
     println!(mime_guess!(default = "application/octet-stream", "Cargo.lock"));
 }
 
-// The `tuple` feature let these macros above support to input nested literal string tuples, which is useful when you want to use these macros inside a `macro_rule!` macro and concatenate with other literal strings.
+// The `tuple` feature lets these macros above support to input nested literal string tuples, which is useful when you want to use these macros inside a `macro_rule!` macro and concatenate with other literal strings.
 // `$x:expr` matchers can be used in these macros thus.
 #[cfg(feature = "tuple")]
 {
