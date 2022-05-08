@@ -1,6 +1,6 @@
 [package]
 name = "manifest-dir-macros"
-version = "0.1.14"
+version = "0.1.15"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
 repository = "https://github.com/magiclen/manifest-dir-macros"

@@ -392,7 +392,7 @@ pub fn get_file_stem(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Gets the file stem for other purposes. If there is no file extension, the default value will be used, or a compile error will be shown.
+/// Gets the file extension for other purposes. If there is no file extension, the default value will be used, or a compile error will be shown.
 ///
 /// Multiple components can be input by using commas to separate them.
 #[proc_macro]
