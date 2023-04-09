@@ -1,9 +1,6 @@
 #[cfg(all(windows, feature = "replace-separator"))]
 use std::ffi::OsString;
-
-use std::ffi::OsStr;
-
-use std::path::Path;
+use std::{ffi::OsStr, path::Path};
 
 use quote::quote;
 use syn::Expr;
@@ -91,10 +88,10 @@ pub fn output_os_str<S: AsRef<OsStr>>(s: S) -> TokenStream {
             };
 
             code.into()
-        }
+        },
         None => {
             compile_error(format!("The OsStr {:?} cannot be canonicalized to a UTF-8 string.", s))
-        }
+        },
     }
 }
 
@@ -109,10 +106,10 @@ pub fn output_path<P: AsRef<Path>>(p: P) -> TokenStream {
             };
 
             code.into()
-        }
+        },
         None => {
             compile_error(format!("The path {:?} cannot be canonicalized to a UTF-8 string.", p))
-        }
+        },
     }
 }
 

@@ -56,20 +56,15 @@ println!(get_parent!(default = "/home", "/"));
 mod functions;
 mod join_builder;
 
-use std::env;
-use std::path::PathBuf;
-
-use syn::parse_macro_input;
-
-#[cfg(feature = "mime_guess")]
-use quote::quote;
-
-use once_cell::sync::Lazy;
-use proc_macro::TokenStream;
-
-use join_builder::*;
+use std::{env, path::PathBuf};
 
 use functions::*;
+use join_builder::*;
+use once_cell::sync::Lazy;
+use proc_macro::TokenStream;
+#[cfg(feature = "mime_guess")]
+use quote::quote;
+use syn::parse_macro_input;
 
 static MANIFEST_DIR: Lazy<PathBuf> = Lazy::new(|| {
     let s = env::var_os("CARGO_MANIFEST_DIR").expect("we need CARGO_MANIFEST_DIR");
@@ -87,11 +82,8 @@ static MANIFEST_DIR: Lazy<PathBuf> = Lazy::new(|| {
 pub fn path(input: TokenStream) -> TokenStream {
     let original_path: PathBuf = syn::parse_macro_input!(input as JoinBuilder).into();
 
-    let p = if original_path.is_absolute() {
-        original_path
-    } else {
-        MANIFEST_DIR.join(original_path)
-    };
+    let p =
+        if original_path.is_absolute() { original_path } else { MANIFEST_DIR.join(original_path) };
 
     output_path(p)
 }
@@ -103,11 +95,8 @@ pub fn path(input: TokenStream) -> TokenStream {
 pub fn exist_path(input: TokenStream) -> TokenStream {
     let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
 
-    let p = if original_path.is_absolute() {
-        original_path
-    } else {
-        MANIFEST_DIR.join(original_path)
-    };
+    let p =
+        if original_path.is_absolute() { original_path } else { MANIFEST_DIR.join(original_path) };
 
     if p.exists() {
         output_path(p)
@@ -123,11 +112,8 @@ pub fn exist_path(input: TokenStream) -> TokenStream {
 pub fn directory_path(input: TokenStream) -> TokenStream {
     let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
 
-    let p = if original_path.is_absolute() {
-        original_path
-    } else {
-        MANIFEST_DIR.join(original_path)
-    };
+    let p =
+        if original_path.is_absolute() { original_path } else { MANIFEST_DIR.join(original_path) };
 
     if p.is_dir() {
         output_path(p)
@@ -143,11 +129,8 @@ pub fn directory_path(input: TokenStream) -> TokenStream {
 pub fn not_directory_path(input: TokenStream) -> TokenStream {
     let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
 
-    let p = if original_path.is_absolute() {
-        original_path
-    } else {
-        MANIFEST_DIR.join(original_path)
-    };
+    let p =
+        if original_path.is_absolute() { original_path } else { MANIFEST_DIR.join(original_path) };
 
     if p.metadata().map(|m| !m.is_dir()).unwrap_or(false) {
         output_path(p)
@@ -163,11 +146,8 @@ pub fn not_directory_path(input: TokenStream) -> TokenStream {
 pub fn file_path(input: TokenStream) -> TokenStream {
     let original_path: PathBuf = parse_macro_input!(input as JoinBuilder).into();
 
-    let p = if original_path.is_absolute() {
-        original_path
-    } else {
-        MANIFEST_DIR.join(original_path)
-    };
+    let p =
+        if original_path.is_absolute() { original_path } else { MANIFEST_DIR.join(original_path) };
 
     if p.is_file() {
         output_path(p)
@@ -365,12 +345,10 @@ pub fn get_file_name(input: TokenStream) -> TokenStream {
 
     match jb.0.file_name() {
         Some(file_name) => output_os_str(file_name),
-        None => {
-            match jb.1 {
-                Some(expr) => output_expr(&expr),
-                None => compile_error(format!("The path {:?} has no file name", jb.0)),
-            }
-        }
+        None => match jb.1 {
+            Some(expr) => output_expr(&expr),
+            None => compile_error(format!("The path {:?} has no file name", jb.0)),
+        },
     }
 }
 
@@ -383,12 +361,10 @@ pub fn get_file_stem(input: TokenStream) -> TokenStream {
 
     match jb.0.file_stem() {
         Some(file_stem) => output_os_str(file_stem),
-        None => {
-            match jb.1 {
-                Some(expr) => output_expr(&expr),
-                None => compile_error(format!("The path {:?} has no file stem", jb.0)),
-            }
-        }
+        None => match jb.1 {
+            Some(expr) => output_expr(&expr),
+            None => compile_error(format!("The path {:?} has no file stem", jb.0)),
+        },
     }
 }
 
@@ -401,12 +377,10 @@ pub fn get_extension(input: TokenStream) -> TokenStream {
 
     match jb.0.extension() {
         Some(extension) => output_os_str(extension),
-        None => {
-            match jb.1 {
-                Some(expr) => output_expr(&expr),
-                None => compile_error(format!("The path {:?} has no file extension", jb.0)),
-            }
-        }
+        None => match jb.1 {
+            Some(expr) => output_expr(&expr),
+            None => compile_error(format!("The path {:?} has no file extension", jb.0)),
+        },
     }
 }
 
@@ -419,12 +393,10 @@ pub fn get_parent(input: TokenStream) -> TokenStream {
 
     match jb.0.parent() {
         Some(parent) => output_path(parent),
-        None => {
-            match jb.1 {
-                Some(expr) => output_expr(&expr),
-                None => compile_error(format!("The path {:?} has no parent", jb.0)),
-            }
-        }
+        None => match jb.1 {
+            Some(expr) => output_expr(&expr),
+            None => compile_error(format!("The path {:?} has no parent", jb.0)),
+        },
     }
 }
 
@@ -449,17 +421,12 @@ pub fn mime_guess(input: TokenStream) -> TokenStream {
             };
 
             code.into()
-        }
-        None => {
-            match jb.1 {
-                Some(expr) => output_expr(&expr),
-                None => {
-                    compile_error(format!(
-                        "The path {:?} can not be guessed for its mime type",
-                        jb.0
-                    ))
-                }
-            }
-        }
+        },
+        None => match jb.1 {
+            Some(expr) => output_expr(&expr),
+            None => {
+                compile_error(format!("The path {:?} can not be guessed for its mime type", jb.0))
+            },
+        },
     }
 }
