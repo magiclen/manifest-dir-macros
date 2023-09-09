@@ -1,9 +1,9 @@
 [package]
 name = "manifest-dir-macros"
-version = "0.1.17"
+version = "0.1.18"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.60"
 repository = "https://github.com/magiclen/manifest-dir-macros"
 homepage = "https://magiclen.org/manifest-dir-macros"
 keywords = ["CARGO_MANIFEST_DIR", "directory", "project", "root"]
