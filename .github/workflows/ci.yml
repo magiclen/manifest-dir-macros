@@ -39,6 +39,7 @@ jobs:
         features:
           -
           - --no-default-features
+          - --all-features
     name: Test ${{ matrix.toolchain }} on ${{ matrix.os }} (${{ matrix.features }})
     runs-on: ${{ matrix.os }}
     steps:
@@ -62,6 +63,7 @@ jobs:
         features:
           -
           - --no-default-features
+          - --all-features
     name: Test ${{ matrix.toolchain }} on ${{ matrix.os }} (${{ matrix.features }})
     runs-on: ${{ matrix.os }}
     steps:

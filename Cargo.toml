@@ -1,13 +1,13 @@
 [package]
 name = "manifest-dir-macros"
-version = "0.1.18"
+version = "0.1.19"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
 rust-version = "1.80"
 repository = "https://github.com/magiclen/manifest-dir-macros"
 homepage = "https://magiclen.org/manifest-dir-macros"
 keywords = ["CARGO_MANIFEST_DIR", "directory", "project", "root"]
-categories = ["no-std", "rust-patterns"]
+categories = ["rust-patterns"]
 description = "This crate provides function-like macros to check or operate paths relative to CARGO_MANIFEST_DIR at compile time."
 license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
@@ -16,16 +16,17 @@ include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1"
 syn = "2"
-quote = "1"
+quote = "1.0.25"
 
 mime_guess = { version = "2", optional = true }
 
 [features]
 default = ["replace-separator"]
+mime_guess = ["dep:mime_guess"]
 replace-separator = []
 tuple = ["syn/full"]
 
 [package.metadata.docs.rs]
 all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

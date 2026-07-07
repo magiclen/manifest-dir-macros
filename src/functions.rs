@@ -11,6 +11,7 @@ use crate::TokenStream;
 // On Windows, `/` or `\` could be used as the path separator. We would prefer customarily using `/` as the separator in our hard code. This replacement is not necessary but can make the path look good.
 #[inline]
 pub fn beautify_windows_path(mut s: String) -> String {
+    // SAFETY: The code only changes ASCII slash bytes into the Windows separator byte, so the string stays valid UTF-8.
     let bytes = unsafe { s.as_mut_vec() };
 
     for b in bytes.iter_mut() {

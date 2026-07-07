@@ -5,6 +5,14 @@ Manifest Dir Macros
 
 This crate provides function-like macros to check or operate paths relative to **CARGO_MANIFEST_DIR** at compile time.
 
+## Features
+
+- `replace-separator`: Enables Windows path separator replacement for path-producing macros. This feature is enabled by default.
+- `tuple`: Enables nested literal string tuples as path input, which is useful when calling these macros from `macro_rules!` macros that capture `$x:expr` values.
+- `mime_guess`: Enables the `mime_guess!` macro for guessing MIME types from path extensions.
+
+This crate is a proc-macro crate and uses `std` at macro expansion time. The expanded macro output is a string literal, so it can still be used by target crates that do not use `std`.
+
 ## Examples
 
 ```rust
@@ -41,7 +49,7 @@ println!(get_parent!(default = "/home", "/"));
     println!(mime_guess!(default = "application/octet-stream", "Cargo.lock"));
 }
 
-// The `tuple` feature lets these macros above support to input nested literal string tuples, which is useful when you want to use these macros inside a `macro_rule!` macro and concatenate with other literal strings.
+// The `tuple` feature lets these macros above support to input nested literal string tuples, which is useful when you want to use these macros inside a `macro_rules!` macro and concatenate with other literal strings.
 // `$x:expr` matchers can be used in these macros thus.
 #[cfg(feature = "tuple")]
 {

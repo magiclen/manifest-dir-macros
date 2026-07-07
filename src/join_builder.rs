@@ -1,10 +1,6 @@
 use std::path::PathBuf;
 
 #[cfg(feature = "tuple")]
-use quote::ToTokens;
-#[cfg(feature = "tuple")]
-use syn::spanned::Spanned;
-#[cfg(feature = "tuple")]
 use syn::Lit;
 use syn::{
     parse::{Parse, ParseStream},
@@ -57,7 +53,7 @@ fn parse(
         let s = input.parse::<LitStr>()?.value();
 
         #[cfg(all(windows, feature = "replace-separator"))]
-        let s = crate::functions::beautify_windows_path(s);
+        let s = if _beautify { crate::functions::beautify_windows_path(s) } else { s };
 
         path.push(s);
     }
@@ -66,17 +62,16 @@ fn parse(
 #[cfg(feature = "tuple")]
 fn handle_expr(expr: Expr, path: &mut PathBuf, _beautify: bool) -> Result<(), syn::Error> {
     match expr {
-        Expr::Lit(lit) => {
-            if let Lit::Str(s) = lit.lit {
+        Expr::Lit(lit) => match lit.lit {
+            Lit::Str(s) => {
                 let s = s.value();
 
                 #[cfg(all(windows, feature = "replace-separator"))]
                 let s = if _beautify { crate::functions::beautify_windows_path(s) } else { s };
 
                 path.push(s);
-            } else {
-                return Err(syn::Error::new(lit.span(), "not a literal string"));
-            }
+            },
+            lit => return Err(syn::Error::new_spanned(lit, "not a literal string")),
         },
         Expr::Tuple(tuple) => {
             for expr in tuple.elems {
@@ -85,18 +80,14 @@ fn handle_expr(expr: Expr, path: &mut PathBuf, _beautify: bool) -> Result<(), sy
         },
         Expr::Group(group) => {
             // In order to use the `expr` matcher in this macro. I don't know why it ends up here.
-            let expr = syn::parse2::<Expr>(group.expr.into_token_stream())?;
-
-            return handle_expr(expr, path, _beautify);
+            return handle_expr(*group.expr, path, _beautify);
         },
         Expr::Paren(paren) => {
-            let expr = syn::parse2::<Expr>(paren.expr.into_token_stream())?;
-
-            return handle_expr(expr, path, _beautify);
+            return handle_expr(*paren.expr, path, _beautify);
         },
         _ => {
-            return Err(syn::Error::new(
-                expr.span(),
+            return Err(syn::Error::new_spanned(
+                expr,
                 "not a literal string or a literal string tuple",
             ));
         },
