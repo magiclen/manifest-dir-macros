@@ -56,17 +56,16 @@ println!(get_parent!(default = "/home", "/"));
 mod functions;
 mod join_builder;
 
-use std::{env, path::PathBuf};
+use std::{env, path::PathBuf, sync::LazyLock};
 
 use functions::*;
 use join_builder::*;
-use once_cell::sync::Lazy;
 use proc_macro::TokenStream;
 #[cfg(feature = "mime_guess")]
 use quote::quote;
 use syn::parse_macro_input;
 
-static MANIFEST_DIR: Lazy<PathBuf> = Lazy::new(|| {
+static MANIFEST_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
     let s = env::var_os("CARGO_MANIFEST_DIR").expect("we need CARGO_MANIFEST_DIR");
 
     #[cfg(all(windows, feature = "replace-separator"))]
